@@ -1,12 +1,17 @@
 package com.yas.max.worker.service;
 
+import com.yas.max.dto.enums.TaskStatus;
 import com.yas.max.dto.messages.TaskMessage;
+import com.yas.max.worker.entity.Task;
+import com.yas.max.worker.repository.TaskRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.InputStream;
+import java.util.Random;
 
 @Slf4j
 @Service
@@ -14,26 +19,46 @@ import java.io.InputStream;
 public class TaskListener {
 
     private final MinioService minioService;
+    private final TaskRepository taskRepository;
+    private final Random random = new Random();
 
     @RabbitListener(queues = "task.queue")
+    @Transactional
     public void processTask(TaskMessage message) {
-        log.info("Отримано завдання з RabbitMQ");
-        log.info("  - Task ID: {}", message.taskId());
-        log.info("  - User ID: {}", message.userId());
-        log.info("  - File Name: {}", message.fileObjectName());
+
+        log.info("Початок обробки завдання: {}", message.taskId());
 
         try {
-            InputStream fileStream = minioService.downloadFile(message.fileObjectName());
 
-            byte[] content = fileStream.readAllBytes();
 
-            fileStream.close();
+            Task task = taskRepository.findById(message.taskId()).orElseThrow();
+            task.setStatus(TaskStatus.IN_PROGRESS);
+            taskRepository.saveAndFlush(task);
 
-            log.info("Обробка документу");
-            Thread.sleep(5000);
-            log.info("Документ успішно оброблено");
+            try {
+                InputStream fileStream = minioService.downloadFile(message.fileObjectName());
+                byte[] content = fileStream.readAllBytes();
+                log.info("  - Файл завантажено. Розмір: {} байт", content.length);
+                fileStream.close();
+
+                log.info("  - Аналіз тексту на унікальність...");
+                Thread.sleep(3000);
+
+                double similarity = Math.round(random.nextDouble(100.0) * 100.0) / 100.0;
+
+                task.setSimilarityScore(similarity);
+                task.setStatus(TaskStatus.DONE);
+                taskRepository.save(task);
+
+                log.info("Завдання {} завершено! Збігів: {}%", message.taskId(), similarity);
+
+            } catch (Exception e) {
+                log.error("Помилка обробки завдання {}: {}", message.taskId(), e.getMessage());
+                task.setStatus(TaskStatus.FAILED);
+                taskRepository.save(task);
+            }
         } catch (Exception e) {
-            log.error("Помилка обробки завдання {}: {}", message.taskId(), e.getMessage());
+            log.error("Критична помилка повідомлення {}: {}", message.taskId(), e.getMessage());
         }
 
     }
