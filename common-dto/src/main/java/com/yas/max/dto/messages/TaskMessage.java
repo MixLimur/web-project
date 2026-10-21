@@ -1,4 +1,4 @@
-package com.yas.max.dto.enums.messages;
+package com.yas.max.dto.messages;
 
 import java.io.Serializable;
 
