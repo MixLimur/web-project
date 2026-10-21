@@ -40,6 +40,12 @@ public class TaskService {
         return taskId;
     }
 
+    @Transactional(readOnly = true)
+    public Task getTask(String taskId) {
+        return taskRepository.findById(taskId)
+                .orElseThrow(() -> new RuntimeException("Завдання не знайдено"));
+    }
+
     private User getOrCreateUser(String identifier, boolean isRegistered) {
         return userRepository.findByIdentifier(identifier)
                 .orElseGet(() -> userRepository.save(User.builder()

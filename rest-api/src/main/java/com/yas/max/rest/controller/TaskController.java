@@ -1,13 +1,13 @@
 package com.yas.max.rest.controller;
 
+import com.yas.max.rest.entity.Task;
 import com.yas.max.rest.service.TaskService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("api/tasks")
@@ -30,6 +30,16 @@ public class TaskController {
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body("Помилка обробки файлу: " + e.getMessage());
         }
+    }
 
+    @GetMapping("/{taskId}")
+    public ResponseEntity<?> getTaskStatus(@PathVariable String taskId) {
+        Task task = taskService.getTask(taskId);
+        return ResponseEntity.ok(Map.of(
+                "taskId", task.getId(),
+                "status", task.getStatus().name(),
+                "similarityScore", task.getSimilarityScore() != null ? task.getSimilarityScore() : "Ще перевіряється"
+                )
+        );
     }
 }

@@ -27,4 +27,7 @@ public class Task {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @Column(name = "similarity_score")
+    private Double similarityScore;
+
 }

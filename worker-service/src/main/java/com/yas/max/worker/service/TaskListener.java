@@ -29,7 +29,7 @@ public class TaskListener {
         log.info("Початок обробки завдання: {}", message.taskId());
 
         try {
-
+            Thread.sleep(500);
 
             Task task = taskRepository.findById(message.taskId()).orElseThrow();
             task.setStatus(TaskStatus.IN_PROGRESS);
