@@ -11,7 +11,7 @@
 </head>
 <body>
 <h1>Завантаження документа</h1>
-
+<p>Ви увійшли як: <strong th:text="${#authentication.name}"></strong></p>
 <div th:if="${message}" class="success" th:text="${message}"></div>
 <div th:if="${error}" class="error" th:text="${error}"></div>
 
