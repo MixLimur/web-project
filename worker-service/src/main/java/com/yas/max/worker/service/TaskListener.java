@@ -23,7 +23,6 @@ public class TaskListener {
     private final Random random = new Random();
 
     @RabbitListener(queues = "task.queue")
-    @Transactional
     public void processTask(TaskMessage message) {
 
         log.info("Початок обробки завдання: {}", message.taskId());
@@ -31,9 +30,11 @@ public class TaskListener {
         try {
             Thread.sleep(500);
 
-            Task task = taskRepository.findById(message.taskId()).orElseThrow();
+            Task task = taskRepository.findById(message.taskId())
+                    .orElseThrow(() -> new RuntimeException("Завдання не знайдено в БД!"));
             task.setStatus(TaskStatus.IN_PROGRESS);
-            taskRepository.saveAndFlush(task);
+            task.setProgress(0);
+            taskRepository.save(task);
 
             try {
                 InputStream fileStream = minioService.downloadFile(message.fileObjectName());
@@ -44,9 +45,17 @@ public class TaskListener {
                 log.info("  - Аналіз тексту на унікальність...");
                 Thread.sleep(3000);
 
+                for (int i = 20; i <= 80; i += 20) {
+                    Thread.sleep(3000);
+                    task.setProgress(i);
+                    taskRepository.saveAndFlush(task);
+                    log.info("  - Прогрес: {}%", i);
+                }
+
                 double similarity = Math.round(random.nextDouble(100.0) * 100.0) / 100.0;
 
                 task.setSimilarityScore(similarity);
+                task.setProgress(100);
                 task.setStatus(TaskStatus.DONE);
                 taskRepository.save(task);
 

@@ -30,4 +30,7 @@ public class Task {
     @Column(name = "similarity_score")
     private Double similarityScore;
 
+    @Column(name = "progress")
+    private Integer progress;
+
 }

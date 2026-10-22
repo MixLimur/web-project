@@ -38,6 +38,7 @@ public class TaskController {
         return ResponseEntity.ok(Map.of(
                 "taskId", task.getId(),
                 "status", task.getStatus().name(),
+                "progress", task.getProgress() != null ? task.getProgress() : 0,
                 "similarityScore", task.getSimilarityScore() != null ? task.getSimilarityScore() : "Ще перевіряється"
                 )
         );
