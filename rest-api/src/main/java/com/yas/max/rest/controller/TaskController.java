@@ -1,8 +1,11 @@
 package com.yas.max.rest.controller;
 
 import com.yas.max.rest.entity.Task;
+import com.yas.max.rest.exception.QuotaExceededException;
+import com.yas.max.rest.exception.TaskNotFoundException;
 import com.yas.max.rest.service.TaskService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,6 +28,8 @@ public class TaskController {
         try {
             String taskId = taskService.processFile(file, identifier, isRegistered);
             return ResponseEntity.ok(taskId);
+        } catch (QuotaExceededException e) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body(e.getMessage());
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
@@ -34,13 +39,18 @@ public class TaskController {
 
     @GetMapping("/{taskId}")
     public ResponseEntity<?> getTaskStatus(@PathVariable String taskId) {
-        Task task = taskService.getTask(taskId);
-        return ResponseEntity.ok(Map.of(
-                "taskId", task.getId(),
-                "status", task.getStatus().name(),
-                "progress", task.getProgress() != null ? task.getProgress() : 0,
-                "similarityScore", task.getSimilarityScore() != null ? task.getSimilarityScore() : "Ще перевіряється"
-                )
-        );
+        try {
+            Task task = taskService.getTask(taskId);
+            return ResponseEntity.ok(Map.of(
+                    "taskId", task.getId(),
+                    "status", task.getStatus().name(),
+                    "progress", task.getProgress() != null ? task.getProgress() : 0,
+                    "similarityScore", task.getSimilarityScore() != null ? task.getSimilarityScore() : "Ще перевіряється"
+            ));
+        } catch (TaskNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Системна помилка"));
+        }
     }
 }

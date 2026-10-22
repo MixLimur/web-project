@@ -5,6 +5,8 @@ import com.yas.max.dto.messages.TaskMessage;
 import com.yas.max.rest.config.RabbitMQConfig;
 import com.yas.max.rest.entity.Task;
 import com.yas.max.rest.entity.User;
+import com.yas.max.rest.exception.QuotaExceededException;
+import com.yas.max.rest.exception.TaskNotFoundException;
 import com.yas.max.rest.repository.TaskRepository;
 import com.yas.max.rest.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -51,7 +53,7 @@ public class TaskService {
     @Transactional(readOnly = true)
     public Task getTask(String taskId) {
         return taskRepository.findById(taskId)
-                .orElseThrow(() -> new RuntimeException("Завдання не знайдено"));
+                .orElseThrow(() -> new TaskNotFoundException("Завдання не знайдено"));
     }
 
     private User getOrCreateUser(String identifier, boolean isRegistered) {
@@ -74,7 +76,7 @@ public class TaskService {
 
         if (activeTasks >= currentLimit) {
             String role = user.isRegistered() ? "користувачів" : "гостей";
-            throw new RuntimeException(
+            throw new QuotaExceededException(
                     String.format("Вичерпано ліміт одночасних перевірок для %s (%d завдань). Дочекайтесь завершення поточних.", role, currentLimit)
             );
         }
