@@ -19,6 +19,7 @@
         <module>common-dto</module>
         <module>rest-api</module>
         <module>worker-service</module>
+        <module>web-ui</module>
     </modules>
 
 
