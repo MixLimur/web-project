@@ -9,10 +9,12 @@ import com.yas.max.rest.repository.TaskRepository;
 import com.yas.max.rest.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -23,6 +25,12 @@ public class TaskService {
     private final TaskRepository taskRepository;
     private final MinioService minioService;
     private final RabbitTemplate rabbitTemplate;
+
+    @Value("${app.limits.guest-active-tasks}")
+    private int guestLimit;
+
+    @Value("${app.limits.user-active-tasks}")
+    private int userLimit;
 
     @Transactional
     public String processFile(MultipartFile file, String identifier, boolean isRegistered) throws Exception {
@@ -55,10 +63,20 @@ public class TaskService {
                         .build()));
     }
 
+    @Transactional(readOnly = true)
     private void validateUserQuota(User user) {
-        int limit = user.isRegistered() ? 10 : 3;
-        if (user.getFilesProcessed() >= limit) {
-            throw new RuntimeException("Вичерпано ліміт перевірок для користувача: " + user.getIdentifier());
+        int currentLimit = user.isRegistered() ? userLimit : guestLimit;
+
+        long activeTasks = taskRepository.countByUserIdAndStatusIn(
+                user.getId(),
+                List.of(TaskStatus.PENDING, TaskStatus.IN_PROGRESS)
+        );
+
+        if (activeTasks >= currentLimit) {
+            String role = user.isRegistered() ? "користувачів" : "гостей";
+            throw new RuntimeException(
+                    String.format("Вичерпано ліміт одночасних перевірок для %s (%d завдань). Дочекайтесь завершення поточних.", role, currentLimit)
+            );
         }
     }
 
