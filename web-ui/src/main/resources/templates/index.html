@@ -2,10 +2,22 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title th:text="${title}">Документи</title>
+    <title>Система перевірки</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .success { color: green; margin-bottom: 10px; font-weight: bold; }
+        .error { color: red; margin-bottom: 10px; font-weight: bold; }
+    </style>
 </head>
 <body>
-<h1 th:text="${title}">Привіт, Thymeleaf!</h1>
-<p>Модуль Web-UI успішно запущено.</p>
+<h1>Завантаження документа</h1>
+
+<div th:if="${message}" class="success" th:text="${message}"></div>
+<div th:if="${error}" class="error" th:text="${error}"></div>
+
+<form method="POST" th:action="@{/upload}" enctype="multipart/form-data">
+    <input type="file" name="file" required />
+    <button type="submit">Перевірити на плагіат</button>
+</form>
 </body>
 </html>

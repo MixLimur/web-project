@@ -1,6 +1,10 @@
 server:
   port: 8082
 
+app:
+  rest-api:
+    url: http://localhost:8080
+
 spring:
   application:
     name: web-ui
