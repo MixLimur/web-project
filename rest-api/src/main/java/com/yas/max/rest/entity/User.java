@@ -19,6 +19,11 @@ public class User {
     @Column(unique = true, nullable = false)
     private String identifier;
 
+    private String password;
+
+    @Column(nullable = false)
+    private String role = "ROLE_USER";
+
     @Column(nullable = false)
     private boolean isRegistered;
 
