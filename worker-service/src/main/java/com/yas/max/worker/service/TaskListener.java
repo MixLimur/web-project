@@ -32,6 +32,12 @@ public class TaskListener {
 
             Task task = taskRepository.findById(message.taskId())
                     .orElseThrow(() -> new RuntimeException("Завдання не знайдено в БД!"));
+
+            if (task.getStatus() == TaskStatus.CANCELLED) {
+                System.out.println("Завдання " + task.getId() + " скасовано користувачем.");
+                return;
+            }
+
             task.setStatus(TaskStatus.IN_PROGRESS);
             task.setProgress(0);
             taskRepository.save(task);
@@ -46,7 +52,7 @@ public class TaskListener {
                 Thread.sleep(3000);
 
                 for (int i = 20; i <= 80; i += 20) {
-                    if(task.getStatus() == TaskStatus.CANCELLED) return;
+                    if(taskRepository.findById(task.getId()).get().getStatus() == TaskStatus.CANCELLED) return;
                     Thread.sleep(3000);
                     task.setProgress(i);
                     taskRepository.saveAndFlush(task);

@@ -8,6 +8,7 @@
         .success { color: green; margin-bottom: 10px; font-weight: bold; }
         .error { color: red; margin-bottom: 10px; font-weight: bold; }
     </style>
+    <script src="https://unpkg.com/htmx.org@2.0.3"></script>
 </head>
 <body>
 <h1>Завантаження документа</h1>
@@ -64,57 +65,17 @@
                 });
         }
 
-        function pollHistory() {
-            fetch('/history-data')
-                .then(response => {
-                    if (!response.ok) throw new Error("Network response was not ok");
-                    return response.json();
-                })
-                .then(data => {
-                    const tbody = document.getElementById('history-body');
-                    tbody.innerHTML = ''; // Очищаємо стару таблицю
-
-                    if (data.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Ви ще не завантажили жодного файлу.</td></tr>';
-                        return;
-                    }
-
-                    data.forEach(task => {
-                        const shortId = task.taskId.substring(0, 8) + '...';
-                        const score = task.similarityScore !== '—' ? task.similarityScore + '%' : '—';
-
-                        let actionBtn = '';
-                        if (task.status === 'PENDING' || task.status === 'IN_PROGRESS') {
-                            actionBtn = `<button onclick="cancelTask('${task.taskId}')" style="color: red; cursor: pointer;">Скасувати</button>`;
-                        }
-
-                        const row = `<tr>
-                            <td>${shortId}</td>
-                            <td>${task.fileName}</td>
-                            <td><strong>${task.status}</strong></td>
-                            <td>${task.progress}%</td>
-                            <td>${score}</td>
-                            <td>${actionBtn}</td>
-                        </tr>`;
-                        tbody.innerHTML += row;
-                    });
-                })
-                .catch(error => console.error('Помилка оновлення історії:', error));
-        }
-
         function cancelTask(taskId) {
             if (!confirm('Ви впевнені, що хочете скасувати це завдання?')) return;
 
             fetch('/cancel/' + taskId, { method: 'POST' })
                 .then(response => {
-                    if (response.ok) pollHistory(); // Одразу оновлюємо таблицю
-                    else alert('Помилка скасування');
+                    if (!response.ok) alert('Помилка скасування');
                 })
                 .catch(err => console.error(err));
         }
 
         setTimeout(pollTaskStatus, 1000);
-        setInterval(pollHistory, 5000);
     }
 </script>
 
@@ -129,9 +90,15 @@
         <th>Статус</th>
         <th>Прогрес</th>
         <th>Результат (Збіги)</th>
+        <th>Дії</th>
     </tr>
     </thead>
-    <tbody id="history-body">
+    <tbody id="history-body"
+           th:fragment="history-tbody"
+           hx-get="/history-fragment"
+           hx-trigger="every 2s"
+           hx-swap="outerHTML">
+
     <tr th:each="task : ${tasks}">
         <td th:text="${#strings.substring(task.taskId, 0, 8)} + '...'">ID</td>
         <td th:text="${task.fileName}">Файл</td>
@@ -140,6 +107,12 @@
         </td>
         <td th:text="${task.progress + '%'}">0%</td>
         <td th:text="${task.similarityScore != '—' ? task.similarityScore + '%' : '—'}">Результат</td>
+        <td>
+            <button th:if="${task.status == 'PENDING' or task.status == 'IN_PROGRESS'}"
+                    th:data-task-id="${task.taskId}"
+                    onclick="cancelTask(this.getAttribute('data-task-id'))"
+                    style="color: red; cursor: pointer;">Скасувати</button>
+        </td>
     </tr>
     <tr th:if="${#lists.isEmpty(tasks)}">
         <td colspan="5" style="text-align: center;">Ви ще не завантажили жодного файлу.</td>

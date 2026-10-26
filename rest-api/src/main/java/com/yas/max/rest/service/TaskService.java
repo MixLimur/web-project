@@ -130,5 +130,6 @@ public class TaskService {
 
         task.setStatus(TaskStatus.CANCELLED);
         taskRepository.save(task);
+        System.out.println("Task"+ taskId +" cancelled");
     }
 }

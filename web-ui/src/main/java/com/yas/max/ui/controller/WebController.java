@@ -75,16 +75,16 @@ public class WebController {
         }
     }
 
-    @GetMapping(value = "/history-data", produces = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseBody
-    public ResponseEntity<?> getHistoryData(Principal principal, HttpSession session) {
+    @GetMapping(value = "/history-fragment")
+    public String getHistoryData(Principal principal, HttpSession session, Model model) {
         boolean isRegistered = (principal != null);
         String identifier = isRegistered ? principal.getName() : "guest_" + session.getId();
         try {
-            return ResponseEntity.ok(taskApiClient.getUserTasksHistory(identifier));
+            model.addAttribute("tasks", taskApiClient.getUserTasksHistory(identifier));
         } catch (Exception e) {
-            return ResponseEntity.ok(List.of());
+            model.addAttribute("tasks", List.of());
         }
+        return "index :: history-tbody";
     }
 
     @PostMapping(value = "/cancel/{taskId}", produces = MediaType.APPLICATION_JSON_VALUE)
