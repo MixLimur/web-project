@@ -64,17 +64,6 @@
                     statusText.innerText = 'Втрачено зв\'язок із сервером';
                 });
         }
-
-        function cancelTask(taskId) {
-            if (!confirm('Ви впевнені, що хочете скасувати це завдання?')) return;
-
-            fetch('/cancel/' + taskId, { method: 'POST' })
-                .then(response => {
-                    if (!response.ok) alert('Помилка скасування');
-                })
-                .catch(err => console.error(err));
-        }
-
         setTimeout(pollTaskStatus, 1000);
     }
 </script>
@@ -109,9 +98,12 @@
         <td th:text="${task.similarityScore != '—' ? task.similarityScore + '%' : '—'}">Результат</td>
         <td>
             <button th:if="${task.status == 'PENDING' or task.status == 'IN_PROGRESS'}"
-                    th:data-task-id="${task.taskId}"
-                    onclick="cancelTask(this.getAttribute('data-task-id'))"
-                    style="color: red; cursor: pointer;">Скасувати</button>
+                    th:attr="hx-post=@{/cancel/{id}(id=${task.taskId})}"
+                    hx-confirm="Ви впевнені, що хочете скасувати це завдання?"
+                    hx-swap="none"
+                    style="color: red; padding: 4px 8px; border: 1px solid red; border-radius: 4px; background: white; cursor: pointer;">
+                Скасувати
+            </button>
         </td>
     </tr>
     <tr th:if="${#lists.isEmpty(tasks)}">

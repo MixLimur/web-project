@@ -52,26 +52,43 @@ public class TaskListener {
                 Thread.sleep(3000);
 
                 for (int i = 20; i <= 80; i += 20) {
-                    if(taskRepository.findById(task.getId()).get().getStatus() == TaskStatus.CANCELLED) return;
+
                     Thread.sleep(3000);
-                    task.setProgress(i);
-                    taskRepository.saveAndFlush(task);
+
+                    Task freshTask = taskRepository.findById(message.taskId()).orElse(null);
+
+                    if (freshTask == null || freshTask.getStatus() == TaskStatus.CANCELLED) {
+                        log.info("Завдання {} скасовано під час виконання! Зупинка.", message.taskId());
+                        return;
+                    }
+                    freshTask.setProgress(i);
+                    taskRepository.saveAndFlush(freshTask);
                     log.info("  - Прогрес: {}%", i);
+                }
+
+                Task finalTask = taskRepository.findById(message.taskId()).orElse(null);
+                if (finalTask == null || finalTask.getStatus() == TaskStatus.CANCELLED) {
+                    log.info("Завдання {} скасовано перед видачею результату.", message.taskId());
+                    return;
                 }
 
                 double similarity = Math.round(random.nextDouble(100.0) * 100.0) / 100.0;
 
-                task.setSimilarityScore(similarity);
-                task.setProgress(100);
-                task.setStatus(TaskStatus.DONE);
-                taskRepository.save(task);
+                finalTask.setSimilarityScore(similarity);
+                finalTask.setProgress(100);
+                finalTask.setStatus(TaskStatus.DONE);
+                taskRepository.save(finalTask);
 
                 log.info("Завдання {} завершено! Збігів: {}%", message.taskId(), similarity);
 
             } catch (Exception e) {
                 log.error("Помилка обробки завдання {}: {}", message.taskId(), e.getMessage());
-                task.setStatus(TaskStatus.FAILED);
-                taskRepository.save(task);
+                taskRepository.findById(message.taskId()).ifPresent(t -> {
+                    if (t.getStatus() != TaskStatus.CANCELLED) {
+                        t.setStatus(TaskStatus.FAILED);
+                        taskRepository.save(t);
+                    }
+                });
             }
         } catch (Exception e) {
             log.error("Критична помилка повідомлення {}: {}", message.taskId(), e.getMessage());

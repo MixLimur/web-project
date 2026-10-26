@@ -8,9 +8,18 @@ import org.springframework.stereotype.Component;
 public class TaskMapper {
 
     public TaskHistoryDto toHistoryDto(Task task) {
+
+        String fullFileName = task.getFileObjectName();
+        String cleanFileName = fullFileName;
+
+        int underscoreIndex = fullFileName.indexOf('_');
+        if (underscoreIndex != -1) {
+            cleanFileName = fullFileName.substring(underscoreIndex + 1);
+        }
+
         return new TaskHistoryDto(
                 task.getId(),
-                task.getFileObjectName(),
+                cleanFileName,
                 task.getStatus().name(),
                 task.getProgress() != null ? task.getProgress() : 0,
                 task.getSimilarityScore() != null ? task.getSimilarityScore().toString() : "—"
