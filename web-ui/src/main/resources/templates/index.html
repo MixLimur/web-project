@@ -64,9 +64,70 @@
                 });
         }
 
+        function pollHistory() {
+            fetch('/history-data')
+                .then(response => {
+                    if (!response.ok) throw new Error("Network response was not ok");
+                    return response.json();
+                })
+                .then(data => {
+                    const tbody = document.getElementById('history-body');
+                    tbody.innerHTML = ''; // Очищаємо стару таблицю
+
+                    if (data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Ви ще не завантажили жодного файлу.</td></tr>';
+                        return;
+                    }
+
+                    data.forEach(task => {
+                        const shortId = task.taskId.substring(0, 8) + '...';
+                        const score = task.similarityScore !== '—' ? task.similarityScore + '%' : '—';
+
+                        const row = `<tr>
+                            <td>${shortId}</td>
+                            <td>${task.fileName}</td>
+                            <td><strong>${task.status}</strong></td>
+                            <td>${task.progress}%</td>
+                            <td>${score}</td>
+                        </tr>`;
+                        tbody.innerHTML += row;
+                    });
+                })
+                .catch(error => console.error('Помилка оновлення історії:', error));
+        }
         setTimeout(pollTaskStatus, 1000);
+        setInterval(pollHistory, 5000);
     }
 </script>
+
+<hr style="margin-top: 30px;">
+<h2>Ваші завдання</h2>
+
+<table border="1" cellpadding="10" cellspacing="0" style="width: 100%; text-align: left; border-collapse: collapse;">
+    <thead>
+    <tr style="background-color: #f2f2f2;">
+        <th>ID Завдання</th>
+        <th>Файл</th>
+        <th>Статус</th>
+        <th>Прогрес</th>
+        <th>Результат (Збіги)</th>
+    </tr>
+    </thead>
+    <tbody id="history-body">
+    <tr th:each="task : ${tasks}">
+        <td th:text="${#strings.substring(task.taskId, 0, 8)} + '...'">ID</td>
+        <td th:text="${task.fileName}">Файл</td>
+        <td>
+            <strong th:text="${task.status}">Статус</strong>
+        </td>
+        <td th:text="${task.progress + '%'}">0%</td>
+        <td th:text="${task.similarityScore != '—' ? task.similarityScore + '%' : '—'}">Результат</td>
+    </tr>
+    <tr th:if="${#lists.isEmpty(tasks)}">
+        <td colspan="5" style="text-align: center;">Ви ще не завантажили жодного файлу.</td>
+    </tr>
+    </tbody>
+</table>
 
 </body>
 </html>

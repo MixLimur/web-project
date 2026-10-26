@@ -1,5 +1,6 @@
 package com.yas.max.rest.controller;
 
+import com.yas.max.dto.TaskHistoryDto;
 import com.yas.max.rest.entity.Task;
 import com.yas.max.rest.exception.QuotaExceededException;
 import com.yas.max.rest.exception.TaskNotFoundException;
@@ -10,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -53,4 +55,10 @@ public class TaskController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "Системна помилка"));
         }
     }
+
+    @GetMapping("/history")
+    public ResponseEntity<List<TaskHistoryDto>> getUserTasks(@RequestParam("identifier") String identifier) {
+        return ResponseEntity.ok(taskService.getUserTasks(identifier));
+    }
+
 }

@@ -1,5 +1,6 @@
 package com.yas.max.rest.service;
 
+import com.yas.max.dto.TaskHistoryDto;
 import com.yas.max.dto.enums.TaskStatus;
 import com.yas.max.dto.messages.TaskMessage;
 import com.yas.max.rest.config.RabbitMQConfig;
@@ -7,6 +8,7 @@ import com.yas.max.rest.entity.Task;
 import com.yas.max.rest.entity.User;
 import com.yas.max.rest.exception.QuotaExceededException;
 import com.yas.max.rest.exception.TaskNotFoundException;
+import com.yas.max.rest.mapper.TaskMapper;
 import com.yas.max.rest.repository.TaskRepository;
 import com.yas.max.rest.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +19,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +31,7 @@ public class TaskService {
     private final TaskRepository taskRepository;
     private final MinioService minioService;
     private final RabbitTemplate rabbitTemplate;
+    private final TaskMapper taskMapper;
 
     @Value("${app.limits.guest-active-tasks}")
     private int guestLimit;
@@ -98,5 +103,14 @@ public class TaskService {
     private void sendTaskToQueue(String taskId, Long userId, String fileObjectName) {
         TaskMessage message = new TaskMessage(taskId, userId, fileObjectName);
         rabbitTemplate.convertAndSend(RabbitMQConfig.TASK_EXCHANGE, RabbitMQConfig.TASK_ROUTING_KEY, message);
+    }
+
+    @Transactional(readOnly = true)
+    public List<TaskHistoryDto> getUserTasks(String identifier) {
+        return userRepository.findByIdentifier(identifier)
+                .map(user -> taskRepository.findAllByUserId(user.getId()).stream()
+                        .map(taskMapper::toHistoryDto)
+                        .toList())
+                .orElse(List.of());
     }
 }

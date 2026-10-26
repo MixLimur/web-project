@@ -8,6 +8,8 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestClient;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class TaskApiClient {
@@ -33,5 +35,15 @@ public class TaskApiClient {
                 .uri("/api/tasks/" + taskId)
                 .retrieve()
                 .body(String.class);
+    }
+
+    public List<?> getUserTasksHistory(String identifier) {
+        return restClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/api/tasks/history")
+                        .queryParam("identifier", identifier)
+                        .build())
+                .retrieve()
+                .body(List.class);
     }
 }
