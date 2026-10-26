@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.InputStream;
+import java.util.OptionalDouble;
 import java.util.Random;
 
 @Slf4j
@@ -20,79 +21,105 @@ public class TaskListener {
 
     private final MinioService minioService;
     private final TaskRepository taskRepository;
+    private final PlagiarismSimulatorService simulatorService;
     private final Random random = new Random();
 
     @RabbitListener(queues = "task.queue")
     public void processTask(TaskMessage message) {
-
-        log.info("Початок обробки завдання: {}", message.taskId());
+        String taskId = message.taskId();
+        log.info("Початок обробки завдання: {}", taskId);
 
         try {
-            Thread.sleep(500);
-
-            Task task = taskRepository.findById(message.taskId())
-                    .orElseThrow(() -> new RuntimeException("Завдання не знайдено в БД!"));
-
-            if (task.getStatus() == TaskStatus.CANCELLED) {
-                System.out.println("Завдання " + task.getId() + " скасовано користувачем.");
+            if (!initializeTask(taskId)) {
                 return;
             }
 
-            task.setStatus(TaskStatus.IN_PROGRESS);
-            task.setProgress(0);
-            taskRepository.save(task);
+            OptionalDouble similarityResult = executeHeavyLogic(message);
 
-            try {
-                InputStream fileStream = minioService.downloadFile(message.fileObjectName());
-                byte[] content = fileStream.readAllBytes();
-                log.info("  - Файл завантажено. Розмір: {} байт", content.length);
-                fileStream.close();
-
-                log.info("  - Аналіз тексту на унікальність...");
-                Thread.sleep(3000);
-
-                for (int i = 20; i <= 80; i += 20) {
-
-                    Thread.sleep(3000);
-
-                    Task freshTask = taskRepository.findById(message.taskId()).orElse(null);
-
-                    if (freshTask == null || freshTask.getStatus() == TaskStatus.CANCELLED) {
-                        log.info("Завдання {} скасовано під час виконання! Зупинка.", message.taskId());
-                        return;
-                    }
-                    freshTask.setProgress(i);
-                    taskRepository.saveAndFlush(freshTask);
-                    log.info("  - Прогрес: {}%", i);
-                }
-
-                Task finalTask = taskRepository.findById(message.taskId()).orElse(null);
-                if (finalTask == null || finalTask.getStatus() == TaskStatus.CANCELLED) {
-                    log.info("Завдання {} скасовано перед видачею результату.", message.taskId());
-                    return;
-                }
-
-                double similarity = Math.round(random.nextDouble(100.0) * 100.0) / 100.0;
-
-                finalTask.setSimilarityScore(similarity);
-                finalTask.setProgress(100);
-                finalTask.setStatus(TaskStatus.DONE);
-                taskRepository.save(finalTask);
-
-                log.info("Завдання {} завершено! Збігів: {}%", message.taskId(), similarity);
-
-            } catch (Exception e) {
-                log.error("Помилка обробки завдання {}: {}", message.taskId(), e.getMessage());
-                taskRepository.findById(message.taskId()).ifPresent(t -> {
-                    if (t.getStatus() != TaskStatus.CANCELLED) {
-                        t.setStatus(TaskStatus.FAILED);
-                        taskRepository.save(t);
-                    }
-                });
+            if (similarityResult.isPresent()) {
+                saveTaskResult(taskId, similarityResult.getAsDouble());
+            } else {
+                log.info("Завдання {} перервано під час виконання.", taskId);
             }
+
         } catch (Exception e) {
-            log.error("Критична помилка повідомлення {}: {}", message.taskId(), e.getMessage());
+            log.error("Помилка обробки завдання {}: {}", taskId, e.getMessage());
+            markTaskAsFailed(taskId);
+        }
+    }
+
+    private boolean initializeTask(String taskId) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new RuntimeException("Завдання не знайдено в БД!"));
+
+        if (task.getStatus() == TaskStatus.CANCELLED) {
+            log.info("Завдання {} скасовано користувачем.", taskId);
+            return false;
         }
 
+        task.setStatus(TaskStatus.IN_PROGRESS);
+        task.setProgress(0);
+        taskRepository.save(task);
+        return true;
     }
+
+    private OptionalDouble executeHeavyLogic(TaskMessage message) throws Exception {
+        String taskId = message.taskId();
+
+        log.info("  - Завантаження та читання файлу...");
+        String text = minioService.getFileContent(message.fileObjectName());
+
+        log.info("  - Початок важкого CPU-аналізу...");
+        double similarity = simulatorService.performHeavyAnalysis(
+                text,
+                progress -> updateTaskProgress(taskId, progress),
+                () -> isTaskCancelled(taskId)
+        );
+
+        if (similarity < 0) {
+            return OptionalDouble.empty(); // Сигналізуємо, що розрахунок перервано
+        }
+
+        return OptionalDouble.of(similarity);
+    }
+
+    private void updateTaskProgress(String taskId, int progress) {
+        if (progress % 5 == 0) {
+            taskRepository.findById(taskId).ifPresent(t -> {
+                if (t.getStatus() != TaskStatus.CANCELLED) {
+                    t.setProgress(progress);
+                    taskRepository.save(t);
+                    log.info("  - Прогрес завдання: {}%", progress);
+                }
+            });
+        }
+    }
+
+    private boolean isTaskCancelled(String taskId) {
+        return taskRepository.findById(taskId)
+                .map(t -> t.getStatus() == TaskStatus.CANCELLED)
+                .orElse(true);
+    }
+
+    private void saveTaskResult(String taskId, double similarity) {
+        taskRepository.findById(taskId).ifPresent(task -> {
+            if (task.getStatus() != TaskStatus.CANCELLED) {
+                task.setSimilarityScore(similarity);
+                task.setProgress(100);
+                task.setStatus(TaskStatus.DONE);
+                taskRepository.save(task);
+                log.info("Завдання {} завершено! Збігів: {}%", taskId, similarity);
+            }
+        });
+    }
+
+    private void markTaskAsFailed(String taskId) {
+        taskRepository.findById(taskId).ifPresent(task -> {
+            if (task.getStatus() != TaskStatus.CANCELLED) {
+                task.setStatus(TaskStatus.FAILED);
+                taskRepository.save(task);
+            }
+        });
+    }
+
 }

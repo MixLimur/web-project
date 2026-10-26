@@ -6,14 +6,17 @@ import com.yas.max.dto.messages.TaskMessage;
 import com.yas.max.rest.config.RabbitMQConfig;
 import com.yas.max.rest.entity.Task;
 import com.yas.max.rest.entity.User;
+import com.yas.max.rest.event.TaskCreatedEvent;
 import com.yas.max.rest.exception.QuotaExceededException;
 import com.yas.max.rest.exception.TaskNotFoundException;
+import com.yas.max.rest.listener.TaskTransactionListener;
 import com.yas.max.rest.mapper.TaskMapper;
 import com.yas.max.rest.repository.TaskRepository;
 import com.yas.max.rest.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,7 +34,7 @@ public class TaskService {
     private final UserRepository userRepository;
     private final TaskRepository taskRepository;
     private final MinioService minioService;
-    private final RabbitTemplate rabbitTemplate;
+    private final ApplicationEventPublisher eventPublisher;
     private final TaskMapper taskMapper;
 
     @Value("${app.limits.guest-active-tasks}")
@@ -109,7 +112,7 @@ public class TaskService {
 
     private void sendTaskToQueue(String taskId, Long userId, String fileObjectName) {
         TaskMessage message = new TaskMessage(taskId, userId, fileObjectName);
-        rabbitTemplate.convertAndSend(RabbitMQConfig.TASK_EXCHANGE, RabbitMQConfig.TASK_ROUTING_KEY, message);
+        eventPublisher.publishEvent(new TaskCreatedEvent(message));
     }
 
     @Transactional(readOnly = true)

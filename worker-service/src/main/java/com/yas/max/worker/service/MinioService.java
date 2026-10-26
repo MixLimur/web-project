@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 @Slf4j
 @Service
@@ -27,6 +28,13 @@ public class MinioService {
                         .object(objectName)
                         .build()
         );
+    }
+
+    public String getFileContent(String objectName) throws Exception {
+        log.info("Читання тексту з файлу {} у MinIO", objectName);
+        try (InputStream stream = downloadFile(objectName)) {
+            return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+        }
     }
 
 }
