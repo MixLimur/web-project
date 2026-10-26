@@ -3,6 +3,9 @@ package com.yas.max.rest.entity;
 import com.yas.max.dto.enums.TaskStatus;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "tasks")
@@ -32,5 +35,9 @@ public class Task {
 
     @Column(name = "progress")
     private Integer progress;
+
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
+    private LocalDateTime createdAt;
 
 }

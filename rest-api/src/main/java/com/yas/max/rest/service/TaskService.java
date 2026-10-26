@@ -118,11 +118,8 @@ public class TaskService {
     @Transactional(readOnly = true)
     public List<TaskHistoryDto> getUserTasks(String identifier) {
         return userRepository.findByIdentifier(identifier)
-                .map(user -> taskRepository.findAllByUserId(user.getId()).stream()
+                .map(user -> taskRepository.findTasksForUserSorted(user.getId()).stream()
                         .map(taskMapper::toHistoryDto)
-                        .sorted(java.util.Comparator.comparing((TaskHistoryDto dto) ->
-                            (dto.status().equals("PENDING") || dto.status().equals("IN_PROGRESS")) ? 0 : 1
-                        ))
                         .toList())
                 .orElse(List.of());
     }

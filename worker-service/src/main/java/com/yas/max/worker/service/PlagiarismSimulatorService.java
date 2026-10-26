@@ -20,7 +20,7 @@ public class PlagiarismSimulatorService {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hash = text.getBytes();
 
-            long totalIterations = 1_000_000L + (long) text.length() * 50_000L;
+            long totalIterations = 1_000_000L + (long) text.length() * 7_000L;
 
             for (int i = 1; i <= totalIterations; i++) {
                 if (i % 100_000 == 0 && isCancelled.getAsBoolean()) {

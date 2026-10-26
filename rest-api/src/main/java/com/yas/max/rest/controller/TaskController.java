@@ -25,7 +25,7 @@ public class TaskController {
     public ResponseEntity<String> uploadFile(
             @RequestParam("file") MultipartFile file,
             @RequestParam("identifier") String identifier,
-            @RequestParam(value = "isRegistered", defaultValue = "fals  e") boolean isRegistered) {
+            @RequestParam(value = "isRegistered", defaultValue = "false") boolean isRegistered) {
 
         try {
             String taskId = taskService.processFile(file, identifier, isRegistered);

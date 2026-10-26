@@ -90,7 +90,7 @@
 <table class="history-table">
     <thead>
     <tr>
-        <th>ID Завдання</th>
+        <th>Час додавання</th>
         <th>Файл</th>
         <th>Статус</th>
         <th>Прогрес</th>
@@ -105,7 +105,7 @@
            hx-swap="outerHTML">
 
     <tr th:each="task : ${tasks}">
-        <td th:text="${#strings.substring(task.taskId, 0, 8)} + '...'">ID</td>
+        <td th:text="${task.createdAt}">Час</td>
         <td th:text="${task.fileName}">Файл</td>
         <td>
             <strong th:text="${task.status}">Статус</strong>
