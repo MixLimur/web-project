@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Помилка</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<div class="auth-wrapper">
+    <div class="auth-container text-center">
+
+        <h1 class="text-danger" style="font-size: 48px; margin-bottom: 10px;">Oops!</h1>
+        <h2 style="color: #333; margin-bottom: 15px;">Сталася помилка</h2>
+
+        <div class="alert alert-error" th:text="${error} ?: 'Сталася непередбачена системна помилка.'">
+            Деталі помилки
+        </div>
+
+        <div class="links text-center" style="color: #6c757d; margin-bottom: 20px;">
+            <span th:text="'Статус: ' + ${status}">Статус: 500</span> |
+            <span th:text="'Час: ' + ${timestamp}">Час</span>
+        </div>
+
+        <a href="/" class="btn btn-link" style="display: inline-block; text-align: center; box-sizing: border-box; text-decoration: none;">
+            Повернутися на головну
+        </a>
+
+    </div>
+</div>
+
+</body>
+</html>

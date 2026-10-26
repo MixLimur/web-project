@@ -25,6 +25,8 @@ spring:
     listener:
       simple:
         prefetch: 1
+        concurrency: 1
+        max-concurrency: 1
 
 minio:
   url: http://localhost:9000

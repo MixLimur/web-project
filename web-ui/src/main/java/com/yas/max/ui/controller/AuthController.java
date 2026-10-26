@@ -40,4 +40,9 @@ public class AuthController {
             return "register";
         }
     }
+
+    @GetMapping("/error")
+    public String error() {
+        return "error";
+    }
 }
