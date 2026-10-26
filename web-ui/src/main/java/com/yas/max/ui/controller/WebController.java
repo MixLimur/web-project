@@ -16,6 +16,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequiredArgsConstructor
@@ -85,4 +86,20 @@ public class WebController {
             return ResponseEntity.ok(List.of());
         }
     }
+
+    @PostMapping(value = "/cancel/{taskId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public ResponseEntity<?> cancelTaskUI(@PathVariable String taskId, Principal principal, HttpSession session) {
+        boolean isRegistered = (principal != null);
+        String identifier = isRegistered ? principal.getName() : "guest_" + session.getId();
+
+        try {
+            String cleanTaskId = taskId.replaceAll("\"", "");
+            taskApiClient.cancelTask(cleanTaskId, identifier);
+            return ResponseEntity.ok(Map.of("status", "SUCCESS"));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Не вдалося скасувати"));
+        }
+    }
+
 }

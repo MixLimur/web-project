@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -110,7 +111,24 @@ public class TaskService {
         return userRepository.findByIdentifier(identifier)
                 .map(user -> taskRepository.findAllByUserId(user.getId()).stream()
                         .map(taskMapper::toHistoryDto)
+                        .sorted(java.util.Comparator.comparing((TaskHistoryDto dto) ->
+                            (dto.status().equals("PENDING") || dto.status().equals("IN_PROGRESS")) ? 0 : 1
+                        ))
                         .toList())
                 .orElse(List.of());
+    }
+
+    public void cancelTask(String taskId, String identifier) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new TaskNotFoundException("Завдання не знайдено"));
+        if(!task.getUser().getIdentifier().equals(identifier)) {
+            throw new RuntimeException("Немає доступу до скасування цього завдання");
+        }
+        if (task.getStatus() == TaskStatus.DONE || task.getStatus() == TaskStatus.CANCELLED) {
+            throw new RuntimeException("Неможливо скасувати завдання в поточному статусі");
+        }
+
+        task.setStatus(TaskStatus.CANCELLED);
+        taskRepository.save(task);
     }
 }

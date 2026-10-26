@@ -61,4 +61,16 @@ public class TaskController {
         return ResponseEntity.ok(taskService.getUserTasks(identifier));
     }
 
+    @PostMapping("/{taskId}/cancel")
+    public ResponseEntity<?> cancelTask(@PathVariable String taskId, @RequestParam("identifier") String identifier) {
+        try {
+            taskService.cancelTask(taskId, identifier);
+            return ResponseEntity.ok(Map.of("message", "Завдання скасовано"));
+        } catch (TaskNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
 }

@@ -46,6 +46,7 @@ public class TaskListener {
                 Thread.sleep(3000);
 
                 for (int i = 20; i <= 80; i += 20) {
+                    if(task.getStatus() == TaskStatus.CANCELLED) return;
                     Thread.sleep(3000);
                     task.setProgress(i);
                     taskRepository.saveAndFlush(task);

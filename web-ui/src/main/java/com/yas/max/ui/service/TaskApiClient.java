@@ -46,4 +46,13 @@ public class TaskApiClient {
                 .retrieve()
                 .body(List.class);
     }
+
+    public void cancelTask(String taskId, String identifier) {
+        restClient.post()
+                .uri("/api/tasks/" + taskId + "/cancel?identifier=" + identifier)
+                .retrieve()
+                .toBodilessEntity();
+    }
+
+
 }

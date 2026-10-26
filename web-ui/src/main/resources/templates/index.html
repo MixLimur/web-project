@@ -83,18 +83,36 @@
                         const shortId = task.taskId.substring(0, 8) + '...';
                         const score = task.similarityScore !== '—' ? task.similarityScore + '%' : '—';
 
+                        let actionBtn = '';
+                        if (task.status === 'PENDING' || task.status === 'IN_PROGRESS') {
+                            actionBtn = `<button onclick="cancelTask('${task.taskId}')" style="color: red; cursor: pointer;">Скасувати</button>`;
+                        }
+
                         const row = `<tr>
                             <td>${shortId}</td>
                             <td>${task.fileName}</td>
                             <td><strong>${task.status}</strong></td>
                             <td>${task.progress}%</td>
                             <td>${score}</td>
+                            <td>${actionBtn}</td>
                         </tr>`;
                         tbody.innerHTML += row;
                     });
                 })
                 .catch(error => console.error('Помилка оновлення історії:', error));
         }
+
+        function cancelTask(taskId) {
+            if (!confirm('Ви впевнені, що хочете скасувати це завдання?')) return;
+
+            fetch('/cancel/' + taskId, { method: 'POST' })
+                .then(response => {
+                    if (response.ok) pollHistory(); // Одразу оновлюємо таблицю
+                    else alert('Помилка скасування');
+                })
+                .catch(err => console.error(err));
+        }
+
         setTimeout(pollTaskStatus, 1000);
         setInterval(pollHistory, 5000);
     }
