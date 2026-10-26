@@ -54,7 +54,7 @@
               style="width: 100%; height: 20px;">
     </progress>
 
-    <p>Відсоток: <span th:text="${statusData != null and statusData.progress != null ? statusData.progress : 0}">0</span>%</p>
+    <p>Прогрес: <span th:text="${statusData != null and statusData.progress != null ? statusData.progress : 0}">0</span>%</p>
 
     <h2 th:if="${statusData != null and statusData.status == 'DONE'}"
         style="color: #0056b3;">
