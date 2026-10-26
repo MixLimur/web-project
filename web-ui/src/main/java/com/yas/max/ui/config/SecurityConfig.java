@@ -21,7 +21,9 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                    .anyRequest().permitAll()
+                    .requestMatchers("/", "/login", "/register", "/css/**", "/js/**",
+                            "/status-fragment/**", "/history-fragment", "/upload", "/cancel/**").permitAll()
+                    .anyRequest().authenticated()
             )
             .formLogin(form ->  form
                     .loginPage("/login")
@@ -41,13 +43,4 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    @Bean
-    public UserDetailsService userDetailsService() {
-        UserDetails user = User.withDefaultPasswordEncoder()
-                .username("admin")
-                .password("admin")
-                .roles("USER")
-                .build();
-        return new InMemoryUserDetailsManager(user);
-    }
 }

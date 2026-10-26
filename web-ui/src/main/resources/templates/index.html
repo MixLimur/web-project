@@ -1,30 +1,53 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="uk">
 <head>
     <meta charset="UTF-8">
     <title>Система перевірки</title>
-    <style>
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        .success { color: green; margin-bottom: 10px; font-weight: bold; }
-        .error { color: red; margin-bottom: 10px; font-weight: bold; }
-    </style>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
     <script src="https://unpkg.com/htmx.org@2.0.3"></script>
 </head>
 <body>
 <h1>Завантаження документа</h1>
-<p>Ви увійшли як: <strong th:text="${#authentication.name}"></strong></p>
-<div th:if="${message}" class="success" th:text="${message}"></div>
-<div th:if="${error}" class="error" th:text="${error}"></div>
 
-<form method="POST" th:action="@{/upload}" enctype="multipart/form-data">
-    <input type="file" name="file" required />
-    <button type="submit">Перевірити на плагіат</button>
+<div class="header-panel">
+    <p>Ви увійшли як: <strong th:text="${userName}"></strong></p>
+    <div class="auth-links">
+        <th:block th:if="${userName == 'Гість'}">
+            <a th:href="@{/login}" class="btn-link text-primary">Увійти</a>
+            <span> | </span>
+            <a th:href="@{/register}" class="btn-link text-primary">Зареєструватися</a>
+        </th:block>
+
+        <th:block th:if="${userName != 'Гість'}">
+            <a th:href="@{/logout}" class="btn-link text-danger">Вийти</a>
+        </th:block>
+    </div>
+</div>
+
+
+
+<div th:if="${message}" class="alert alert-success" th:text="${message}"></div>
+<div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+<form method="POST" th:action="@{/upload}" enctype="multipart/form-data" class="upload-form">
+    <div class="file-upload-wrapper">
+        <input type="file" name="file" id="file-upload" class="file-upload-input" required
+               onchange="document.getElementById('file-name').textContent = this.files[0] ? this.files[0].name : 'Файл не вибрано'" />
+
+        <label for="file-upload" class="file-upload-label">
+            📁 Обрати документ
+        </label>
+
+        <span id="file-name" class="file-name-display">Файл не вибрано</span>
+    </div>
+
+    <button type="submit" class="btn btn-submit btn-upload">Перевірити на плагіат</button>
 </form>
 
 <div th:if="${taskId}"
      id="task-container"
+     class="status-container"
      th:fragment="status-block"
-     style="margin-top: 20px; padding: 15px; border: 1px solid #ccc; border-radius: 5px; background-color: #f9f9f9;"
      th:data-hx-get="|/status-fragment/${taskId}|"
      th:data-hx-trigger="${statusData == null or statusData.status == 'PENDING' or statusData.status == 'IN_PROGRESS' ? 'every 2s' : null}"
      hx-swap="outerHTML">
@@ -35,11 +58,11 @@
         <span th:if="${statusData != null and (statusData.status == 'PENDING' or statusData.status == 'IN_PROGRESS')}"
               th:text="${statusData.status}"></span>
 
-        <span th:if="${statusData != null and statusData.status == 'CANCELLED'}" style="color: red;">
+        <span th:if="${statusData != null and statusData.status == 'CANCELLED'}" class="text-danger">
             Скасовано
         </span>
 
-        <span th:if="${statusData != null and statusData.status == 'FAILED'}" style="color: red;">
+        <span th:if="${statusData != null and statusData.status == 'FAILED'}" class="text-danger">
             Помилка обробки файлу
         </span>
 
@@ -56,18 +79,17 @@
 
     <p>Прогрес: <span th:text="${statusData != null and statusData.progress != null ? statusData.progress : 0}">0</span>%</p>
 
-    <h2 th:if="${statusData != null and statusData.status == 'DONE'}"
-        style="color: #0056b3;">
+    <h2 th:if="${statusData != null and statusData.status == 'DONE'}" class="text-primary">
         Збіг: <span th:text="${statusData.similarityScore}"></span>%
     </h2>
 </div>
 
-<hr style="margin-top: 30px;">
+<hr class="mt-30">
 <h2>Ваші завдання</h2>
 
-<table border="1" cellpadding="10" cellspacing="0" style="width: 100%; text-align: left; border-collapse: collapse;">
+<table class="history-table">
     <thead>
-    <tr style="background-color: #f2f2f2;">
+    <tr>
         <th>ID Завдання</th>
         <th>Файл</th>
         <th>Статус</th>
@@ -95,13 +117,13 @@
                     th:attr="hx-post=@{/cancel/{id}(id=${task.taskId})}"
                     hx-confirm="Ви впевнені, що хочете скасувати це завдання?"
                     hx-swap="none"
-                    style="color: red; padding: 4px 8px; border: 1px solid red; border-radius: 4px; background: white; cursor: pointer;">
+                    class="btn-cancel">
                 Скасувати
             </button>
         </td>
     </tr>
     <tr th:if="${#lists.isEmpty(tasks)}">
-        <td colspan="5" style="text-align: center;">Ви ще не завантажили жодного файлу.</td>
+        <td colspan="6" class="text-center">Ви ще не завантажили жодного файлу.</td>
     </tr>
     </tbody>
 </table>

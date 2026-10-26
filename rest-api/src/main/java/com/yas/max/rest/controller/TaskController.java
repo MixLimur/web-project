@@ -58,6 +58,7 @@ public class TaskController {
 
     @PostMapping("/{taskId}/cancel")
     public ResponseEntity<?> cancelTask(@PathVariable String taskId, @RequestParam("identifier") String identifier) {
+        System.out.println("Trying to stop task");
         try {
             taskService.cancelTask(taskId, identifier);
             return ResponseEntity.ok(Map.of("message", "Завдання скасовано"));

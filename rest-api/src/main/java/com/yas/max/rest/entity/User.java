@@ -21,6 +21,7 @@ public class User {
 
     private String password;
 
+    @Builder.Default
     @Column(nullable = false)
     private String role = "ROLE_USER";
 

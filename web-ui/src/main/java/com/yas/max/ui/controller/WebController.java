@@ -8,10 +8,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestClient;
+import org.springframework.web.client.RestClientResponseException;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -27,8 +25,9 @@ public class WebController {
 
     @GetMapping("/")
     public String index(Principal principal, HttpSession session, Model model) {
-        boolean isRegistered = (principal != null);
-        String identifier = isRegistered ? principal.getName() : "guest_" + session.getId();
+        String identifier = resolveIdentifier(principal, session);
+
+        model.addAttribute("userName", principal != null ? principal.getName() : "Гість");
 
         try {
             List<?> tasks = taskApiClient.getUserTasksHistory(identifier);
@@ -40,10 +39,6 @@ public class WebController {
         return "index";
     }
 
-    @GetMapping("/login")
-    public String login() {
-        return "login";
-    }
 
     @PostMapping("/upload")
     public String uploadFile(@RequestParam("file") MultipartFile file,
@@ -51,23 +46,30 @@ public class WebController {
                              HttpSession session,
                              RedirectAttributes redirectAttributes) {
         try {
+            String identifier = resolveIdentifier(principal, session);
             boolean isRegistered = (principal != null);
-            String identifier = isRegistered ? principal.getName() : "guest_" + session.getId();
 
             String taskId = taskApiClient.uploadTask(file.getResource(), identifier, isRegistered);
 
             redirectAttributes.addFlashAttribute("taskId", taskId);
-            redirectAttributes.addFlashAttribute("message", "Завдання створено! ID: " + taskId);
+            redirectAttributes.addFlashAttribute("message", "Завдання створено!");
+        } catch (RestClientResponseException e) {
+            if (e.getStatusCode().is4xxClientError()) {
+                redirectAttributes.addFlashAttribute("error", e.getResponseBodyAsString());
+            } else {
+                System.err.println("Серверна помилка API: " + e.getMessage());
+                redirectAttributes.addFlashAttribute("error", "Виникла помилка при обробці файлу. Будь ласка, спробуйте пізніше.");
+            }
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Помилка зв'язку з API: " + e.getMessage());
+            System.err.println("Внутрішня помилка UI: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("error", "Виникла помилка при обробці файлу. Будь ласка, спробуйте пізніше.");
         }
         return "redirect:/";
     }
 
     @GetMapping(value = "/history-fragment")
-    public String getHistoryData(Principal principal, HttpSession session, Model model) {
-        boolean isRegistered = (principal != null);
-        String identifier = isRegistered ? principal.getName() : "guest_" + session.getId();
+    public String getHistoryFragment(Principal principal, HttpSession session, Model model) {
+        String identifier = resolveIdentifier(principal, session);
         try {
             model.addAttribute("tasks", taskApiClient.getUserTasksHistory(identifier));
         } catch (Exception e) {
@@ -79,8 +81,7 @@ public class WebController {
     @PostMapping(value = "/cancel/{taskId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @ResponseBody
     public ResponseEntity<?> cancelTaskUI(@PathVariable String taskId, Principal principal, HttpSession session) {
-        boolean isRegistered = (principal != null);
-        String identifier = isRegistered ? principal.getName() : "guest_" + session.getId();
+        String identifier = resolveIdentifier(principal, session);
 
         try {
             String cleanTaskId = taskId.replaceAll("\"", "");
@@ -105,6 +106,10 @@ public class WebController {
             model.addAttribute("statusData", null);
         }
         return "index :: status-block";
+    }
+
+    private String resolveIdentifier(Principal principal, HttpSession session) {
+        return (principal != null) ? principal.getName() : "guest_" + session.getId();
     }
 
 }
