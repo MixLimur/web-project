@@ -62,6 +62,12 @@ public class TaskService {
                 .orElseThrow(() -> new TaskNotFoundException("Завдання не знайдено"));
     }
 
+    @Transactional(readOnly = true)
+    public TaskHistoryDto getTaskDto(String taskId) {
+        Task task = getTask(taskId);
+        return taskMapper.toHistoryDto(task);
+    }
+
     private User getOrCreateUser(String identifier, boolean isRegistered) {
         return userRepository.findByIdentifier(identifier)
                 .orElseGet(() -> userRepository.save(User.builder()

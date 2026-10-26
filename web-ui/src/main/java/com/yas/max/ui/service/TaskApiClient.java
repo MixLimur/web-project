@@ -1,5 +1,6 @@
 package com.yas.max.ui.service;
 
+import com.yas.max.dto.TaskHistoryDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
@@ -30,11 +31,11 @@ public class TaskApiClient {
                 .body(String.class);
     }
 
-    public String getTaskStatus(String taskId) {
+    public TaskHistoryDto getTaskStatus(String taskId) {
         return restClient.get()
                 .uri("/api/tasks/" + taskId)
                 .retrieve()
-                .body(String.class);
+                .body(TaskHistoryDto.class);
     }
 
     public List<?> getUserTasksHistory(String identifier) {

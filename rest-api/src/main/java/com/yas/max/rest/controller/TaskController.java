@@ -42,13 +42,8 @@ public class TaskController {
     @GetMapping("/{taskId}")
     public ResponseEntity<?> getTaskStatus(@PathVariable String taskId) {
         try {
-            Task task = taskService.getTask(taskId);
-            return ResponseEntity.ok(Map.of(
-                    "taskId", task.getId(),
-                    "status", task.getStatus().name(),
-                    "progress", task.getProgress() != null ? task.getProgress() : 0,
-                    "similarityScore", task.getSimilarityScore() != null ? task.getSimilarityScore() : "Ще перевіряється"
-            ));
+            TaskHistoryDto taskDto = taskService.getTaskDto(taskId);
+            return ResponseEntity.ok(taskDto);
         } catch (TaskNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         } catch (Exception e) {

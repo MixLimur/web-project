@@ -21,52 +21,46 @@
     <button type="submit">Перевірити на плагіат</button>
 </form>
 
-<div th:if="${taskId}" style="margin-top: 20px; padding: 15px; border: 1px solid #ccc; border-radius: 5px; background-color: #f9f9f9;" id="task-container" th:data-task-id="${taskId}">
-    <h3>Статус перевірки: <span id="status-text">Ініціалізація...</span></h3>
-    <progress id="progress-bar" value="0" max="100" style="width: 100%; height: 20px;"></progress>
-    <p>Відсоток: <span id="progress-text">0</span>%</p>
-    <h2 id="result-text" style="color: #0056b3; display: none;"></h2>
+<div th:if="${taskId}"
+     id="task-container"
+     th:fragment="status-block"
+     style="margin-top: 20px; padding: 15px; border: 1px solid #ccc; border-radius: 5px; background-color: #f9f9f9;"
+     th:data-hx-get="|/status-fragment/${taskId}|"
+     th:data-hx-trigger="${statusData == null or statusData.status == 'PENDING' or statusData.status == 'IN_PROGRESS' ? 'every 2s' : null}"
+     hx-swap="outerHTML">
+
+    <h3>Статус перевірки:
+        <span th:if="${statusData == null}">Ініціалізація...</span>
+
+        <span th:if="${statusData != null and (statusData.status == 'PENDING' or statusData.status == 'IN_PROGRESS')}"
+              th:text="${statusData.status}"></span>
+
+        <span th:if="${statusData != null and statusData.status == 'CANCELLED'}" style="color: red;">
+            Скасовано
+        </span>
+
+        <span th:if="${statusData != null and statusData.status == 'FAILED'}" style="color: red;">
+            Помилка обробки файлу
+        </span>
+
+        <span th:if="${statusData != null and statusData.status == 'DONE'}">
+            Завершено
+        </span>
+    </h3>
+
+    <progress id="progress-bar"
+              th:value="${statusData != null and statusData.progress != null ? statusData.progress : 0}"
+              max="100"
+              style="width: 100%; height: 20px;">
+    </progress>
+
+    <p>Відсоток: <span th:text="${statusData != null and statusData.progress != null ? statusData.progress : 0}">0</span>%</p>
+
+    <h2 th:if="${statusData != null and statusData.status == 'DONE'}"
+        style="color: #0056b3;">
+        Збіг: <span th:text="${statusData.similarityScore}"></span>%
+    </h2>
 </div>
-
-<script>
-    const taskContainer = document.getElementById('task-container');
-
-    if (taskContainer) {
-        const taskId = taskContainer.getAttribute('data-task-id');
-        const progressBar = document.getElementById('progress-bar');
-        const progressText = document.getElementById('progress-text');
-        const statusText = document.getElementById('status-text');
-        const resultText = document.getElementById('result-text');
-
-        function pollTaskStatus() {
-            fetch('/status/' + taskId)
-                .then(response => {
-                    if (!response.ok) throw new Error("Помилка мережі");
-                    return response.json();
-                })
-                .then(data => {
-                    progressBar.value = data.progress || 0;
-                    progressText.innerText = data.progress || 0;
-                    statusText.innerText = data.status || "Невідомо";
-
-                    if (data.status === 'DONE') {
-                        resultText.style.display = 'block';
-                        resultText.innerText = 'Збіг: ' + data.similarityScore + '%';
-                    } else if (data.status === 'FAILED') {
-                        statusText.innerText = 'Помилка обробки файлу';
-                        statusText.style.color = 'red';
-                    } else {
-                        setTimeout(pollTaskStatus, 2000);
-                    }
-                })
-                .catch(error => {
-                    console.error('Помилка опитування:', error);
-                    statusText.innerText = 'Втрачено зв\'язок із сервером';
-                });
-        }
-        setTimeout(pollTaskStatus, 1000);
-    }
-</script>
 
 <hr style="margin-top: 30px;">
 <h2>Ваші завдання</h2>

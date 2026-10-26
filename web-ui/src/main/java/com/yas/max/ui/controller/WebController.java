@@ -1,5 +1,6 @@
 package com.yas.max.ui.controller;
 
+import com.yas.max.dto.TaskHistoryDto;
 import com.yas.max.ui.service.TaskApiClient;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -63,18 +64,6 @@ public class WebController {
         return "redirect:/";
     }
 
-    @GetMapping(value = "/status/{taskId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    @ResponseBody
-    public ResponseEntity<String> getTaskStatus(@PathVariable String taskId) {
-        try {
-            String cleanTaskId = taskId.replaceAll("\"", "");
-            String response = taskApiClient.getTaskStatus(cleanTaskId);
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("{\"error\": \"Помилка отримання статусу\"}");
-        }
-    }
-
     @GetMapping(value = "/history-fragment")
     public String getHistoryData(Principal principal, HttpSession session, Model model) {
         boolean isRegistered = (principal != null);
@@ -100,6 +89,22 @@ public class WebController {
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of("error", "Не вдалося скасувати"));
         }
+    }
+
+    @GetMapping("/status-fragment/{taskId}")
+    public String getStatusFragment(@PathVariable String taskId, Model model) {
+        try {
+            String cleanTaskId = taskId.replaceAll("\"", "");
+
+            TaskHistoryDto statusData = taskApiClient.getTaskStatus(cleanTaskId);
+
+            model.addAttribute("taskId", cleanTaskId);
+            model.addAttribute("statusData", statusData);
+        } catch (Exception e) {
+            model.addAttribute("taskId", taskId);
+            model.addAttribute("statusData", null);
+        }
+        return "index :: status-block";
     }
 
 }
