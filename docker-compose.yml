@@ -33,6 +33,44 @@ services:
     volumes:
       - minio_data:/data
 
+  rest-api:
+    build:
+      context: ./rest-api
+    container_name: web_rest
+    ports:
+      - "8444:8444"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/web_project_db
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - MINIO_URL=http://minio:9000
+    depends_on:
+      - postgres
+      - rabbitmq
+      - minio
+
+  worker-service:
+    build:
+      context: ./worker-service
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/web_project_db
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - MINIO_URL=http://minio:9000
+    depends_on:
+      - postgres
+      - rabbitmq
+      - minio
+
+  web-ui:
+    build:
+      context: ./web-ui
+    container_name: web_ui
+    ports:
+      - "8443:8443"
+    environment:
+      - APP_REST_API_URL=https://rest-api:8444
+    depends_on:
+      - rest-api
+
 volumes:
   postgres_data:
   rabbitmq_data:
