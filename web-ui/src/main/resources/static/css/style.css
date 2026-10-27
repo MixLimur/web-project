@@ -11,8 +11,16 @@ body {
     border-radius: 4px;
     font-weight: bold;
 }
-.alert-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-.alert-error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+.alert-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
 
 .auth-wrapper {
     display: flex;
@@ -29,23 +37,58 @@ body {
     width: 100%;
     max-width: 400px;
 }
-.form-group { margin-bottom: 15px; }
-.form-group label { display: block; margin-bottom: 5px; color: #333; }
-.form-group input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-.links { text-align: center; margin-top: 15px; font-size: 14px; }
+.form-group {
+    margin-bottom: 15px;
+}
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: #333;
+}
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+.links {
+    text-align: center;
+    margin-top: 15px;
+    font-size: 14px;
+   }
 
 .btn {
-    width: 100%; padding: 10px; background-color: #007bff;
-    color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;
+    width: 100%;
+    padding: 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
 }
-.btn:hover { background-color: #0056b3; }
-.btn-submit { width: auto; background-color: #28a745; }
-.btn-submit:hover { background-color: #218838; }
+.btn:hover {
+    background-color: #0056b3;
+}
+.btn-submit {
+    width: auto;
+    background-color: #28a745;
+}
+.btn-submit:hover {
+    background-color: #218838;
+}
 .btn-cancel {
-    color: red; padding: 4px 8px; border: 1px solid red;
-    border-radius: 4px; background: white; cursor: pointer;
+    color: red;
+    padding: 4px 8px;
+    border: 1px solid red;
+    border-radius: 4px;
+    background: white;
+    cursor: pointer;
 }
-.btn-cancel:hover { background-color: #ffe6e6; }
+.btn-cancel:hover {
+    background-color: #ffe6e6;
+}
 
 .status-container {
     margin-top: 20px;
@@ -60,13 +103,26 @@ body {
     border-collapse: collapse;
     background-color: white;
 }
-.history-table th, .history-table td { padding: 10px; border: 1px solid #ddd; }
-.history-table th { background-color: #f2f2f2; }
+.history-table th, .history-table td {
+    padding: 10px;
+     border: 1px solid #ddd;
+}
+.history-table th {
+    background-color: #f2f2f2;
+}
 
-.text-danger { color: red; }
-.text-primary { color: #0056b3; }
-.text-center { text-align: center; }
-.mt-30 { margin-top: 30px; }
+.text-danger {
+    color: red;
+}
+.text-primary {
+    color: #0056b3;
+}
+.text-center {
+    text-align: center;
+}
+.mt-30 {
+    margin-top: 30px;
+}
 
 .upload-form {
     display: flex;
@@ -149,4 +205,102 @@ body {
 .auth-links span {
     color: #ccc;
     margin: 0 5px;
+}
+
+.text-success-bold {
+    color: #28a745;
+    font-weight: bold;
+}
+
+.text-warning-bold {
+    color: #ff9900;
+    font-weight: bold;
+}
+
+.text-danger-bold {
+    color: #dc3545;
+    font-weight: bold;
+}
+
+.text-muted-small {
+    font-size: 12px;
+    color: #6c757d;
+    margin-top: 4px;
+}
+
+.text-id {
+    font-size: 12px;
+    color: #555;
+}
+
+.admin-header {
+    background-color: #343a40;
+    color: white;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.admin-header a {
+    color: white;
+    text-decoration: underline;
+}
+
+.admin-info-panel {
+    background-color: #fff3cd;
+    border-color: #ffeeba;
+}
+
+.admin-info-text {
+    color: #856404;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.btn-mq {
+    display: inline-block;
+    background-color: #ff6600;
+    color: white;
+    padding: 10px 20px;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+.btn-mq:hover {
+    background-color: #cc5200;
+}
+
+.progress-w100 {
+    width: 100%;
+    height: 20px;
+}
+
+.progress-w80 {
+    width: 80px;
+}
+
+.error-title {
+    font-size: 48px;
+    margin-bottom: 10px;
+}
+
+.error-subtitle {
+    color: #333;
+    margin-bottom: 15px;
+}
+
+.error-links {
+    color: #6c757d;
+    margin-bottom: 20px;
+}
+
+.btn-home {
+    display: inline-block;
+    text-align: center;
+    box-sizing: border-box;
+    text-decoration: none;
 }
