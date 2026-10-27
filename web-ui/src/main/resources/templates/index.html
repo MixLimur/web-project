@@ -71,6 +71,24 @@
         </span>
     </h3>
 
+    <div th:if="${statusData != null and (statusData.status == 'PENDING' or statusData.status == 'IN_PROGRESS') and statusData.estimatedWaitTimeSeconds != null}"
+         class="alert alert-info"
+         style="background-color: #e2f3f5; color: #0c5460; border-color: #d6e9c6; margin: 15px 0;">
+        <th:block th:if="${statusData.status == 'PENDING'}">
+        ⏳ <strong>Ресурси системи зайняті.</strong> Ваш запит поставлено у чергу.<br>
+        </th:block>
+        <th:block th:if="${statusData.status == 'IN_PROGRESS'}">
+        ⏳ <strong>Система обробляє файл.</strong><br>
+        </th:block>
+        Приблизний час очікування:
+        <strong>
+            <span th:text="${statusData.estimatedWaitTimeSeconds > 3600 ? '>60 хв' :
+                ((statusData.estimatedWaitTimeSeconds >= 60 ? (statusData.estimatedWaitTimeSeconds / 60) + ' хв ' : '') +
+                (statusData.estimatedWaitTimeSeconds % 60) + ' сек.')}">
+            </span>
+        </strong>
+    </div>
+
     <progress id="progress-bar"
               th:value="${statusData != null and statusData.progress != null ? statusData.progress : 0}"
               max="100"
@@ -109,6 +127,14 @@
         <td th:text="${task.fileName}">Файл</td>
         <td>
             <strong th:text="${task.status}">Статус</strong>
+            <div th:if="${(task.status == 'PENDING' or task.status == 'IN_PROGRESS') and task.estimatedWaitTimeSeconds != null}"
+                 style="font-size: 12px; color: #6c757d; margin-top: 4px;">
+                ~
+                <span th:text="${task.estimatedWaitTimeSeconds > 3600 ? '>60 хв' :
+                    ((task.estimatedWaitTimeSeconds >= 60 ? (task.estimatedWaitTimeSeconds / 60) + ' хв ' : '') +
+                    (task.estimatedWaitTimeSeconds % 60) + ' сек.')}">
+                </span>
+            </div>
         </td>
         <td th:text="${task.progress + '%'}">0%</td>
         <td th:text="${task.similarityScore != '—' ? task.similarityScore + '%' : '—'}">Результат</td>

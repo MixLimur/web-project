@@ -52,8 +52,10 @@ public class TaskService {
         String taskId = UUID.randomUUID().toString();
         String fileObjectName = taskId + "_" + file.getOriginalFilename();
 
+        long fileSize = file.getSize();
+
         minioService.uploadFile(file, fileObjectName);
-        updateQuotaAndSaveTask(user, taskId, fileObjectName);
+        updateQuotaAndSaveTask(user, taskId, fileObjectName, fileSize);
         sendTaskToQueue(taskId, user.getId(), fileObjectName);
 
         return taskId;
@@ -97,7 +99,7 @@ public class TaskService {
         }
     }
 
-    private void updateQuotaAndSaveTask(User user, String taskId, String fileObjectName) {
+    private void updateQuotaAndSaveTask(User user, String taskId, String fileObjectName, long fileSize) {
         user.setFilesProcessed(user.getFilesProcessed() + 1);
         userRepository.save(user);
 
@@ -106,6 +108,7 @@ public class TaskService {
                 .status(TaskStatus.PENDING)
                 .fileObjectName(fileObjectName)
                 .user(user)
+                .fileSize(fileSize)
                 .build();
         taskRepository.save(task);
     }

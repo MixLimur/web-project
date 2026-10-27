@@ -8,6 +8,7 @@ public record TaskHistoryDto(
         String status,
         Integer progress,
         String similarityScore,
-        String createdAt
+        String createdAt,
+        Integer estimatedWaitTimeSeconds
 ) {
 }
