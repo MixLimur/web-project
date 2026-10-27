@@ -56,4 +56,19 @@ public class TaskApiClient {
     }
 
 
+    public List<TaskHistoryDto> getActiveTasks() {
+        TaskHistoryDto[] tasks = restClient.get()
+                .uri("/api/admin/tasks/active")
+                .retrieve()
+                .body(TaskHistoryDto[].class);
+        return tasks != null ? List.of(tasks) : List.of();
+    }
+
+    public void adminCancelTask(String taskId) {
+        restClient.post()
+                .uri("/api/admin/tasks/" + taskId + "/cancel")
+                .retrieve()
+                .toBodilessEntity();
+    }
+
 }

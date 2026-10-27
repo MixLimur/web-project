@@ -23,4 +23,6 @@ public interface TaskRepository extends JpaRepository<Task, String> {
     long sumFileSizeAhead(@Param("status") com.yas.max.dto.enums.TaskStatus status, @Param("createdAt") java.time.LocalDateTime createdAt);
 
     List<Task> findByStatus(TaskStatus status);
+
+    List<Task> findByStatusInOrderByCreatedAtDesc(List<TaskStatus> statuses);
 }

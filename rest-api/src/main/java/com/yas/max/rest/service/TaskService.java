@@ -141,4 +141,27 @@ public class TaskService {
         taskRepository.save(task);
         System.out.println("Task"+ taskId +" cancelled");
     }
+
+    @Transactional(readOnly = true)
+    public List<TaskHistoryDto> getAllActiveTasks() {
+        return taskRepository.findByStatusInOrderByCreatedAtDesc(
+                        List.of(TaskStatus.PENDING, TaskStatus.IN_PROGRESS)
+                ).stream()
+                .map(taskMapper::toHistoryDto)
+                .toList();
+    }
+
+    @Transactional
+    public void adminCancelTask(String taskId) {
+        Task task = taskRepository.findById(taskId)
+                .orElseThrow(() -> new TaskNotFoundException("Завдання не знайдено"));
+
+        if (task.getStatus() == TaskStatus.DONE || task.getStatus() == TaskStatus.CANCELLED) {
+            throw new RuntimeException("Неможливо скасувати завдання в поточному статусі");
+        }
+
+        task.setStatus(TaskStatus.CANCELLED);
+        taskRepository.save(task);
+    }
+
 }

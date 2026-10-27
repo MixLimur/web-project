@@ -31,4 +31,5 @@ public class User {
     @Column(nullable = false)
     private int filesProcessed;
 
+
 }
