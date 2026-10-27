@@ -71,6 +71,18 @@ services:
     depends_on:
       - rest-api
 
+  autoscaler:
+    build:
+      context: .
+      dockerfile: Dockerfile.autoscaler
+    container_name: task-autoscaler
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./:/app
+    depends_on:
+      - rabbitmq
+    restart: unless-stopped
+
 volumes:
   postgres_data:
   rabbitmq_data:
