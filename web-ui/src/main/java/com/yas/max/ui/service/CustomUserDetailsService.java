@@ -25,7 +25,7 @@ public class CustomUserDetailsService implements UserDetailsService {
                     .authorities(userDto.role())
                     .build();
         } catch (Exception e) {
-            throw new UsernameNotFoundException("Користувача не знайдено: " + username);
+            throw new UsernameNotFoundException("Користувача не знайдено: " + username, e);
         }
     }
 }

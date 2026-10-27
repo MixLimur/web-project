@@ -26,4 +26,11 @@ public class AuthApiClient {
                 .retrieve()
                 .toBodilessEntity();
     }
+
+    public String getUserRole(String identifier) {
+        return restClient.get()
+                .uri("/api/users/{identifier}/role", identifier)
+                .retrieve()
+                .body(String.class);
+    }
 }
